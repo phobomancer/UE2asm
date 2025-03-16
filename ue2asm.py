@@ -112,7 +112,7 @@ def emitCode(AsmLines,outputfile):
         op1_top = 0 #top 8 bits of op1
         op1_bottom = 0 #bottom 4 bits of op1 top 4 of op2
         op2_bottom = 0 #bottom 8 bits of op2
-        if Ops[i].mnemonic["op"]:
+        if "op" in Ops[i].mnemonic:
             op1_top = Ops[i].mnemonic["op"] << 4
             op1_top |= (Ops[i].arg & 0xff) >> 4
         else: #for DB pseudo op use top 4 bits of arg
@@ -120,7 +120,7 @@ def emitCode(AsmLines,outputfile):
         op1_bottom = (Ops[i].arg & 0x0f) << 4
     
         if i+1 < opsLen:
-            if Ops[i+1].mnemonic["op"]:
+            if "op" in Ops[i+1].mnemonic:
                 op1_bottom |= Ops[i+1].mnemonic["op"]
             else: #for DB pseudo op use top 4 bits of arg
                 op1_bottom |= (Ops[i+1].arg >> 8) &0x0f
