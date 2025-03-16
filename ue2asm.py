@@ -47,13 +47,11 @@ class AsmLine:
             self.label=label.group(1)
             line = line[len(label.group(0))::]
             line = line.lstrip()
-            print(line)
         mnemonic = reMnemonic.match(line)
         if mnemonic :
             self.mnemonic = mnemonics[mnemonic.group(1)]
             line = line[len(mnemonic.group(0))::]
             line = line.lstrip()
-            print(line)
             exp = reExpression.match(line)
             if exp:
                 if self.mnemonic["type"] == "noarg":
@@ -72,7 +70,7 @@ def fixAddresses(AsmLines):
     for i in AsmLines: #pass one build symbol table
         
         if i.mnemonic and i.mnemonic["name"]=="ORG":
-            currentWord=eval(i.expression)
+            currentWord=eval(i.expression,{"__builtins__":None})
         if i.label :
             symbols[i.label]=currentWord
         if i.mnemonic and i.mnemonic["name"]!="ORG":
@@ -143,11 +141,9 @@ def main():
         lines = file.readlines()
         linenum=1
         for line in lines:
-            print(line)
             AsmLines.append(AsmLine(line,sys.argv[1],linenum))
             linenum+=1
     fixAddresses(AsmLines)
-    print(AsmLines)
     emitCode(AsmLines,"output.bin")
 
 if __name__=="__main__" :
