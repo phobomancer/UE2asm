@@ -35,7 +35,7 @@ opsList = list(mnemonics.keys())
 opsList.sort(key=len, reverse=True)
 reMnemonic = re.compile("^("+"|".join(opsList)+")",re.IGNORECASE)
 reNonMnemonic = re.compile("^[^\s;]+")
-reExpression = re.compile("([^;$]+)")
+reExpression = re.compile("([^;]+)")
 #reLabel = re.compile("^([_a-zA-Z]*):")
 class AsmLine:
     label=None
@@ -78,6 +78,7 @@ def fixAddresses(AsmLines):
 
     for i in AsmLines: #pass one build symbol table
         
+        i.wordnum = currentWord
         if i.mnemonic and i.mnemonic["name"]=="ORG":
             currentWord=eval(i.expression,{"__builtins__":None})
         if i.label :
@@ -94,6 +95,7 @@ def fixAddresses(AsmLines):
             if symbolNames :                 
                 for symbol in symbolNames: #match longest symbols first
                     i.expression = re.sub(symbol,str(symbols[symbol]),i.expression)
+            i.expression = re.sub('\$', str(i.wordnum),i.expression)
             #print(f"{i.filename}:{i.linenum}  {i.expression}")
             i.arg=eval(i.expression)
 
