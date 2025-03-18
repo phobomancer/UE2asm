@@ -17,7 +17,7 @@ mnemonics = {
     "NOR":  {"name":"NOR","type":"noarg",   "op":12},
     "RLF":  {"name":"RLF","type":"noarg",   "op":13},
     "AND":  {"name":"AND","type":"noarg",   "op":14},
-    "SF" :  {"name":"SF","type":"noarg",   "op":15},
+    "SF" :  {"name":"SF","type":"flags",   "op":15},
     "ORG":  {"name":"ORG","type":"pseudo_op_addr"},
     "DW" :  {"name":"DW","type":"pseudo_op_word"}
 }
@@ -25,13 +25,17 @@ mnemonics = {
 argmax = {
     "address" : 255,
     "bank"    : 15,
+    "flags"   : 3,
     "pseudo_op_addr": 255,
     "pseudo_op_word": 0xfff
 }
 
 reLabel = re.compile("^([_a-zA-Z][_a-zA-Z0-9]*):")
-reMnemonic = re.compile("^("+"|".join(mnemonics.keys())+")")
-reExpression = re.compile("([^;$]+)");
+opsList = list(mnemonics.keys())
+opsList.sort(key=len, reverse=True)
+reMnemonic = re.compile("^("+"|".join(opsList)+")",re.IGNORECASE)
+reNonMnemonic = re.compile("^[^\s;]+")
+reExpression = re.compile("([^;$]+)")
 #reLabel = re.compile("^([_a-zA-Z]*):")
 class AsmLine:
     label=None
@@ -49,7 +53,7 @@ class AsmLine:
             line = line.lstrip()
         mnemonic = reMnemonic.match(line)
         if mnemonic :
-            self.mnemonic = mnemonics[mnemonic.group(1)]
+            self.mnemonic = mnemonics[mnemonic.group(1).upper()]
             line = line[len(mnemonic.group(0))::]
             line = line.lstrip()
             exp = reExpression.match(line)
@@ -62,6 +66,11 @@ class AsmLine:
                 if self.mnemonic["type"] != "noarg":
                     print(f"Syntax Error no argument given for mnemonic {self.mnemonic['name']} {self.filename}:{self.linenum}")
                     exit(1);
+        else:
+            result=reNonMnemonic.match(line)
+            if result :
+                print(f"{filename}:{linenum} Not a mnemonic: {result.group(0)}")
+                exit(1)
 
 def fixAddresses(AsmLines):
     currentWord=0
@@ -85,6 +94,7 @@ def fixAddresses(AsmLines):
             if symbolNames :                 
                 for symbol in symbolNames: #match longest symbols first
                     i.expression = re.sub(symbol,str(symbols[symbol]),i.expression)
+            #print(f"{i.filename}:{i.linenum}  {i.expression}")
             i.arg=eval(i.expression)
 
             #verify arg is legal
@@ -92,7 +102,7 @@ def fixAddresses(AsmLines):
                 print(f"Expression did not evaluate to integer {i.filename}:{i.linenum}")
                 exit(1)
             if i.arg > argmax[i.mnemonic["type"]]:
-                print(f"Argument exceeds legal size for mnemonic {i.mnemonc['name']}: {i.filename}:{i.linenum}")
+                print(f"Argument exceeds legal size for mnemonic {i.mnemonic['name']}: {i.filename}:{i.linenum}")
                 exit(1)
         #while we're here...explicitly set "noarg" operations' arg to 0
         if i.mnemonic and i.mnemonic["type"] == "noarg":
