@@ -8,8 +8,10 @@ the top 4 bits of the word, and operands (if any) in thhe lower 8 bits
 see UE2 documentation for opcode definitions.
 
 The format of input files for ue2asm is that each line of the file will
-be in the following format
+be in the following format:
+```
 [<label>:] [<mnemonic> [<argument>]] [;<comment>]
+```
 
 a label can be any string using the chraracters _,0-9,a-z,A-Z, but must
 start with an underscore _ or a letter.
